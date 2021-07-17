@@ -1,10 +1,16 @@
+# By John Gallaugher https://gallaugher.com  Twitter: @gallaugher
+# YouTube: https://YouTube.com/profgallaugher
+# Step-by-step build video at: https://bit.ly/bluetooth-mason-jar-light
+
+# Run into build trouble? Adafruit runs a great help forum at:
+# https://forums.adafruit.com - most questions are answered within an hour.
+# Adafruit also has a discord channel at:
+# http://adafru.it/discord
+
 import board
 import neopixel
 import time
 
-# TODO From Original - clear out imports not needed.
-# for example, check DigitalInOut, Pulls, etc.
-from digitalio import DigitalInOut, Direction, Pull
 from adafruit_ble import BLERadio
 from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
 from adafruit_ble.services.nordic import UARTService
@@ -13,8 +19,11 @@ from adafruit_bluefruit_connect.color_packet import ColorPacket
 from adafruit_bluefruit_connect.button_packet import ButtonPacket
 
 # import animations and colors
-# TODO check to see if I can use Color.COLOR_NAME instead of imports below.
-# ALSO: Ask someone which is more efficient.
+# While we don't use all of these animations and colors
+# I import them all below in case you want to experiment with them.
+# Full documentation for the adafruit_led_animation library is at:
+# https://circuitpython.readthedocs.io/projects/led-animation/en/latest/api.html
+
 from adafruit_led_animation.animation.solid import Solid
 from adafruit_led_animation.animation.colorcycle import ColorCycle
 from adafruit_led_animation.animation.blink import Blink
@@ -56,17 +65,17 @@ ble = BLERadio()
 uart_server = UARTService()
 advertisement = ProvideServicesAdvertisement(uart_server)
 # Give your CPB a unique name between the quotes below
-advertisement.complete_name = "small-mason-jar-nightlight"
+advertisement.complete_name = "JarLight"
 
 runAnimation = False
 animation_number = -1
 lightPosition = -1
 
-# Update to match the pin connected to your NeoPixels
+# Update to match the pin connected to your NeoPixels if you are using a different pad/pin.
 led_pin = board.A1
-# Update to match the number of NeoPixels you have connected
+# UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
 num_leds = 10
-defaultColor = AMBER
+defaultColor = BLUE
 pickedColor = defaultColor
 
 defaultTime = 0.1
@@ -77,19 +86,9 @@ adjustedTime = defaultTime
 
 strip = neopixel.NeoPixel(led_pin, num_leds, brightness=0.85, auto_write=False)
 
-solid = Solid(strip, color=PINK)
-turnOff = Solid(strip, color=BLACK)
-blink = Blink(strip, speed=0.5, color=JADE)
-colorcycle = ColorCycle(strip, speed=0.5, colors=[MAGENTA, ORANGE, TEAL])
-chase = Chase(strip, speed=0.1, color=WHITE, size=3, spacing=6)
 # for night-rider, battlestar galactica larson scanner effect, set length to something lik e3 and speed to a bit longer like 0.2
 # Comet has a dimming tale and can also bounce back.
 cometTailLength = int(num_leds/3) + 1
-
-# demonstrate that you can pass in custom colors, too.
-# the multi values in parens below are called a tuple value.
-# this tuple has three values between 0 and 255.
-customMaroonSolid = Solid(strip, color = (128, 0, 0))
 
 loopTimes = 0
 strip.fill(pickedColor)
@@ -110,7 +109,7 @@ while True:
         except ValueError:
             continue # or pass. This will start the next
 
-        if isinstance(packet, ColorPacket):
+        if isinstance(packet, ColorPacket): # A color was selected from the app color picker
             print("*** color sent")
             print("pickedColor = ", ColorPacket)
             runAnimation = False
@@ -123,28 +122,30 @@ while True:
             # reset light_position after picking a color
             light_position = -1
 
-        if isinstance(packet, ButtonPacket):
+        if isinstance(packet, ButtonPacket): # A button was pressed from the app Control Pad
             if packet.pressed:
-                if packet.button == ButtonPacket.BUTTON_1:
+                if packet.button == ButtonPacket.BUTTON_1: # app button 1 pressed
                     animation_number = 1
                     runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_2:
+                elif packet.button == ButtonPacket.BUTTON_2: # app button 2 pressed
                     animation_number = 2
                     # palette = blue
                     runAnimation = True
                     ledmode = 2
-                elif packet.button == ButtonPacket.BUTTON_3:
+                elif packet.button == ButtonPacket.BUTTON_3: # app button 3 pressed
                     animation_number = 3
                     # palette = school_colors
                     runAnimation = True
                     ledmode = 3
-                elif packet.button == ButtonPacket.BUTTON_4:
+                elif packet.button == ButtonPacket.BUTTON_4: # app button 4 pressed
                     animation_number = 4
                     runAnimation = True
                     # palette = rainbow_stripe
                     ledmode = 4
                     # buttonAnimation(offset, fadeup, palette)
                 elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
+                    # if up or down was pressed, stop animation and move a single light
+                    # up or down on the strand each time the up or down arrow is pressed.
                     animation_number = 0
                     runAnimation = False
                     # The UP or DOWN button was pressed.
@@ -159,7 +160,7 @@ while True:
                     strip.fill([0, 0, 0])
                     strip[lightPosition] = pickedColor
                     strip.show()
-                elif packet.button == ButtonPacket.RIGHT:
+                elif packet.button == ButtonPacket.RIGHT: # right button will speed up animations
                     # The RIGHT button was pressed.
                     runAnimation = True
                     # reset light_position after animation
@@ -171,7 +172,7 @@ while True:
                         adjustedTime = adjustedTime - tenths
                     if adjustedTime <= 0.0:
                         adjustedTime = minWaitTime
-                elif packet.button == ButtonPacket.LEFT:
+                elif packet.button == ButtonPacket.LEFT: # left button will slow down animations
                     # The LEFT button was pressed.
                     runAnimation = True
                     # reset light_position after animation
