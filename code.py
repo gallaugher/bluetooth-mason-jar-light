@@ -75,7 +75,7 @@ lightPosition = -1
 led_pin = board.A1
 # UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
 num_leds = 10
-defaultColor = BLUE
+defaultColor = AMBER
 pickedColor = defaultColor
 
 defaultTime = 0.1
