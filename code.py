@@ -129,20 +129,13 @@ while True:
                     runAnimation = True
                 elif packet.button == ButtonPacket.BUTTON_2: # app button 2 pressed
                     animation_number = 2
-                    # palette = blue
                     runAnimation = True
-                    ledmode = 2
                 elif packet.button == ButtonPacket.BUTTON_3: # app button 3 pressed
                     animation_number = 3
-                    # palette = school_colors
                     runAnimation = True
-                    ledmode = 3
                 elif packet.button == ButtonPacket.BUTTON_4: # app button 4 pressed
                     animation_number = 4
                     runAnimation = True
-                    # palette = rainbow_stripe
-                    ledmode = 4
-                    # buttonAnimation(offset, fadeup, palette)
                 elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
                     # if up or down was pressed, stop animation and move a single light
                     # up or down on the strand each time the up or down arrow is pressed.
@@ -188,14 +181,14 @@ while True:
                 print("*** COMET or LARSON SCANNER ***")
                 # I set bounc = False because that makes it look circular.
                 # for a tie it's better to True so it looks like it bounces up and down.
-                cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-                animations = AnimateOnce(cometAnimation)
+                chosenAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
+                animations = AnimateOnce(chosenAnimation)
                 while animations.animate():
                     pass
             elif animation_number == 2:
                 print("*** PULSE ***")
-                pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
-                animations = AnimateOnce(pulseAnimation)
+                chosenAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
+                animations = AnimateOnce(chosenAnimation)
                 while animations.animate():
                     pass
             elif animation_number == 3:
@@ -203,8 +196,8 @@ while True:
                 # so I skipped Sparkle & used SparklePulse
             """
                 print("*** SPARKLE PULSE ***")
-                sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=3, color=pickedColor)
-                animations = AnimateOnce(sparklePulseAnimation)
+                chosenAnimation = SparklePulse(strip, speed=adjustedTime, period=3, color=pickedColor)
+                animations = AnimateOnce(chosenAnimation)
                 while animations.animate():
                     pass
             elif animation_number == 4:
