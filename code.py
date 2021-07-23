@@ -1,6 +1,6 @@
 # By John Gallaugher https://gallaugher.com  Twitter: @gallaugher
 # YouTube: https://YouTube.com/profgallaugher
-# Step-by-step build video at: https://bit.ly/bluetooth-mason-jar-light
+# Step-by-step video playlist demonstrating build at: https://bit.ly/bluefruit-school
 
 # Run into build trouble? Adafruit runs a great help forum at:
 # https://forums.adafruit.com - most questions are answered within an hour.
@@ -11,8 +11,7 @@ import board
 import neopixel
 import time
 
-# TODO From Original - clear out imports not needed.
-# for example, check DigitalInOut, Pulls, etc.
+# imports needed for bluetooth
 from digitalio import DigitalInOut, Direction, Pull
 from adafruit_ble import BLERadio
 from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
@@ -22,8 +21,10 @@ from adafruit_bluefruit_connect.color_packet import ColorPacket
 from adafruit_bluefruit_connect.button_packet import ButtonPacket
 
 # import animations and colors
-# TODO check to see if I can use Color.COLOR_NAME instead of imports below.
-# ALSO: Ask someone which is more efficient.
+# While we don't use all of these animations and colors
+# I import them all below in case you want to experiment with them.
+# Full documentation for the adafruit_led_animation library is at:
+# https://circuitpython.readthedocs.io/projects/led-animation/en/latest/api.html
 from adafruit_led_animation.animation.solid import Solid
 from adafruit_led_animation.animation.colorcycle import ColorCycle
 from adafruit_led_animation.animation.blink import Blink
@@ -65,7 +66,7 @@ ble = BLERadio()
 uart_server = UARTService()
 advertisement = ProvideServicesAdvertisement(uart_server)
 # Give your CPB a unique name between the quotes below
-advertisement.complete_name = "MasonJar"
+advertisement.complete_name = "JarLight"
 
 runAnimation = False
 animation_number = -1
@@ -73,8 +74,9 @@ lightPosition = -1
 
 # Update to match the pin connected to your NeoPixels
 led_pin = board.A1
-# Update to match the number of NeoPixels you have connected
+# UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
 num_leds = 10
+# UPDATE color below if you want your light to show a different color at startup
 defaultColor = AMBER
 pickedColor = defaultColor
 
@@ -84,26 +86,25 @@ hundredths = 0.01
 tenths = 0.1
 adjustedTime = defaultTime
 
-strip = neopixel.NeoPixel(led_pin, num_leds, brightness=0.85, auto_write=False)
-
-solid = Solid(strip, color=PINK)
-turnOff = Solid(strip, color=BLACK)
-blink = Blink(strip, speed=0.5, color=JADE)
-colorcycle = ColorCycle(strip, speed=0.5, colors=[MAGENTA, ORANGE, TEAL])
-chase = Chase(strip, speed=0.1, color=WHITE, size=3, spacing=6)
-# for night-rider, battlestar galactica larson scanner effect, set length to something lik e3 and speed to a bit longer like 0.2
-# Comet has a dimming tale and can also bounce back.
-cometTailLength = int(num_leds/3) + 1
-
+# Sets up the Neopixel strand,initializing it to full brightness
+strip = neopixel.NeoPixel(led_pin, num_leds, brightness=1.00, auto_write=False)
 # demonstrate that you can pass in custom colors, too.
 # the multi values in parens below are called a tuple value.
 # this tuple has three values between 0 and 255.
 customMaroonSolid = Solid(strip, color = (128, 0, 0))
 
-loopTimes = 0
+# Comet animation has a dimming tail - sets the tail length
+cometTailLength = int(num_leds/3) + 1
+
+# Set LEDs to light up sold in the default color
 strip.fill(pickedColor)
 strip.write()
 
+# The function runSelected will run the animation number stored in the value animation_number.
+# This function is called in the while True: loop whenever an animation has been started, in while not ble.connected (when not connected to bluetooth)
+# or while ble.connected (when connected to bluetooth). We call it in both locations so that if
+# animations are started, then the user shuts off their phone or moves out of bluetooth range, the
+# last selected animation will continue to run.
 def runSelectedAnimation():
         if animation_number == 1:
             # larson()
@@ -135,17 +136,15 @@ def runSelectedAnimation():
             print("*** RAINBOWS ***")
             # Rainbow: Entire strip starts RED and all lights fade together through rainbow
             rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
-            # animations = AnimateOnce(rainbowAnimation)
             # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
             rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds/3))
             # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
             rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
-            # animations = AnimateOnce(#ANIMATION_NAME_HERE#)
-
-            # rainbowMedley
+            # the animation below runs all three animations, one after the other.
             animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
             while animations.animate():
                 pass
+
 while True:
     ble.start_advertising(advertisement)
     while not ble.connected:
