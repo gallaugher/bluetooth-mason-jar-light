@@ -114,14 +114,12 @@ def runSelectedAnimation():
         # I set bounc = False because that makes it look circular.
         # for a tie it's better to True so it looks like it bounces up and down.
         cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-        # cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=10, bounce=False)
         animations = AnimateOnce(cometAnimation)
         while animations.animate():
             pass
     elif animation_number == 2:
         print("*** PULSE ***")
         pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
-        #pulseAnimation.animate()
         animations = AnimateOnce(pulseAnimation)
         while animations.animate():
             pass
