@@ -150,10 +150,9 @@ while True:
     while not ble.connected:
         if runAnimation == True:
             runSelectedAnimation()
-        #pass
-    ble.stop_advertising()
 
-    # Now we're connected
+    # Now we're connected so we don't need to advertise the device as one that you're able to connect to
+    ble.stop_advertising()
 
     while ble.connected:
         if uart_server.in_waiting:
