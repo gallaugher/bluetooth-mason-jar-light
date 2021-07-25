@@ -25,6 +25,7 @@ from adafruit_bluefruit_connect.button_packet import ButtonPacket
 # I import them all below in case you want to experiment with them.
 # Full documentation for the adafruit_led_animation library is at:
 # https://circuitpython.readthedocs.io/projects/led-animation/en/latest/api.html
+import adafruit_led_animation
 from adafruit_led_animation.animation.solid import Solid
 from adafruit_led_animation.animation.colorcycle import ColorCycle
 from adafruit_led_animation.animation.blink import Blink
