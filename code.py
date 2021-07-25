@@ -181,20 +181,13 @@ while True:
                         runAnimation = True
                     elif packet.button == ButtonPacket.BUTTON_2:
                         animation_number = 2
-                        # palette = blue
                         runAnimation = True
-                        ledmode = 2
                     elif packet.button == ButtonPacket.BUTTON_3:
                         animation_number = 3
-                        # palette = school_colors
                         runAnimation = True
-                        ledmode = 3
                     elif packet.button == ButtonPacket.BUTTON_4:
                         animation_number = 4
                         runAnimation = True
-                        # palette = rainbow_stripe
-                        ledmode = 4
-                        # buttonAnimation(offset, fadeup, palette)
                     elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
                         animation_number = 0
                         runAnimation = False
