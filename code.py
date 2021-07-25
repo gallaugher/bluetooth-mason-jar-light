@@ -80,6 +80,7 @@ num_leds = 10
 defaultColor = AMBER
 pickedColor = defaultColor
 
+# I've programmed these values to set, then adjust the timing of animations
 defaultTime = 0.1
 minWaitTime = 0.01
 hundredths = 0.01
@@ -106,44 +107,44 @@ strip.write()
 # animations are started, then the user shuts off their phone or moves out of bluetooth range, the
 # last selected animation will continue to run.
 def runSelectedAnimation():
-        if animation_number == 1:
-            # larson()
-            print("*** COMET or LARSON SCANNER ***")
-            # I set bounc = False because that makes it look circular.
-            # for a tie it's better to True so it looks like it bounces up and down.
-            cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-            # cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=10, bounce=False)
-            animations = AnimateOnce(cometAnimation)
-            while animations.animate():
-                pass
-        elif animation_number == 2:
-            print("*** PULSE ***")
-            pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
-            #pulseAnimation.animate()
-            animations = AnimateOnce(pulseAnimation)
-            while animations.animate():
-                pass
-        elif animation_number == 3:
-            """ For some reason Sparkle runs indefinitely
-            # so I skipped Sparkle & used SparklePulse
-        """
-            print("*** SPARKLE PULSE ***")
-            sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
-            animations = AnimateOnce(sparklePulseAnimation)
-            while animations.animate():
-                pass
-        elif animation_number == 4:
-            print("*** RAINBOWS ***")
-            # Rainbow: Entire strip starts RED and all lights fade together through rainbow
-            rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
-            # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
-            rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds/3))
-            # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
-            rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
-            # the animation below runs all three animations, one after the other.
-            animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
-            while animations.animate():
-                pass
+    if animation_number == 1:
+        # larson()
+        print("*** COMET or LARSON SCANNER ***")
+        # I set bounc = False because that makes it look circular.
+        # for a tie it's better to True so it looks like it bounces up and down.
+        cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
+        # cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=10, bounce=False)
+        animations = AnimateOnce(cometAnimation)
+        while animations.animate():
+            pass
+    elif animation_number == 2:
+        print("*** PULSE ***")
+        pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
+        #pulseAnimation.animate()
+        animations = AnimateOnce(pulseAnimation)
+        while animations.animate():
+            pass
+    elif animation_number == 3:
+        """ For some reason Sparkle runs indefinitely
+        # so I skipped Sparkle & used SparklePulse
+    """
+        print("*** SPARKLE PULSE ***")
+        sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
+        animations = AnimateOnce(sparklePulseAnimation)
+        while animations.animate():
+            pass
+    elif animation_number == 4:
+        print("*** RAINBOWS ***")
+        # Rainbow: Entire strip starts RED and all lights fade together through rainbow
+        rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
+        # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
+        rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds/3))
+        # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
+        rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
+        # the animation below runs all three animations, one after the other.
+        animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
+        while animations.animate():
+            pass
 
 while True:
     ble.start_advertising(advertisement)
