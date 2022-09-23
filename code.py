@@ -67,7 +67,7 @@ ble = BLERadio()
 uart_server = UARTService()
 advertisement = ProvideServicesAdvertisement(uart_server)
 # Give your CPB a unique name between the quotes below
-advertisement.complete_name = "JarLight"
+advertisement.complete_name = "LED-Sign"
 
 runAnimation = False
 animation_number = -1
@@ -76,9 +76,9 @@ lightPosition = -1
 # Update to match the pin connected to your NeoPixels
 led_pin = board.A1
 # UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
-num_leds = 10
+num_leds = 26
 # UPDATE color below if you want your light to show a different color at startup
-defaultColor = AMBER
+defaultColor = BLUE
 pickedColor = defaultColor
 
 # I've programmed these values to set, then adjust the timing of animations
@@ -89,7 +89,7 @@ tenths = 0.1
 adjustedTime = defaultTime
 
 # Sets up the Neopixel strand,initializing it to full brightness
-strip = neopixel.NeoPixel(led_pin, num_leds, brightness=1.00, auto_write=False)
+strip = neopixel.NeoPixel(led_pin, num_leds, brightness=1.00, auto_write=False, pixel_order = "GRBW")
 # demonstrate that you can pass in custom colors, too.
 # the multi values in parens below are called a tuple value.
 # this tuple has three values between 0 and 255.
@@ -110,11 +110,16 @@ strip.write()
 def runSelectedAnimation():
     if animation_number == 1:
         # larson()
-        print("*** COMET or LARSON SCANNER ***")
+        # print("*** COMET or LARSON SCANNER ***")
+        ##I set bounc = False because that makes it look circular.
+        ##for a tie it's better to True so it looks like it bounces up and down.
+#         cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
+#         animations = AnimateOnce(cometAnimation)
+#         print("*** COMET or LARSON SCANNER ***")
         # I set bounc = False because that makes it look circular.
         # for a tie it's better to True so it looks like it bounces up and down.
-        cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-        animations = AnimateOnce(cometAnimation)
+        solidAnimation = Solid(strip, color=pickedColor)
+        animations = AnimateOnce(solidAnimation)
         while animations.animate():
             pass
     elif animation_number == 2:
