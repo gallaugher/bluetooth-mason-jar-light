@@ -77,7 +77,7 @@ lightPosition = -1
 # Update to match the pin connected to your NeoPixels if you are using a different pad/pin.
 led_pin = board.A1
 # UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
-num_leds = 10
+num_leds = 20
 defaultColor = AMBER
 pickedColor = defaultColor
 
