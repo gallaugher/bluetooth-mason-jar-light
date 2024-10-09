@@ -1,3 +1,4 @@
+# bluetooth-mason-jar-light.py
 # By John Gallaugher https://gallaugher.com  Twitter: @gallaugher
 # YouTube: https://YouTube.com/profgallaugher
 # Step-by-step build video at: https://bit.ly/bluetooth-mason-jar-light
@@ -39,24 +40,24 @@ from adafruit_led_animation.animation.SparklePulse import SparklePulse
 from adafruit_led_animation.sequence import AnimationSequence
 from adafruit_led_animation.sequence import AnimateOnce
 from adafruit_led_animation.color import (
-    AMBER, #(255, 100, 0)
-    AQUA, # (50, 255, 255)
-    BLACK, #OFF (0, 0, 0)
-    BLUE, # (0, 0, 255)
-    CYAN, # (0, 255, 255)
-    GOLD, # (255, 222, 30)
-    GREEN, # (0, 255, 0)
-    JADE, # (0, 255, 40)
-    MAGENTA, #(255, 0, 20)
-    OLD_LACE, # (253, 245, 230)
-    ORANGE, # (255, 40, 0)
-    PINK, # (242, 90, 255)
-    PURPLE, # (180, 0, 255)
-    RED, # (255, 0, 0)
-    TEAL, # (0, 255, 120)
-    WHITE, # (255, 255, 255)
-    YELLOW, # (255, 150, 0)
-    RAINBOW # a list of colors to cycle through
+    AMBER,  # (255, 100, 0)
+    AQUA,  # (50, 255, 255)
+    BLACK,  # OFF (0, 0, 0)
+    BLUE,  # (0, 0, 255)
+    CYAN,  # (0, 255, 255)
+    GOLD,  # (255, 222, 30)
+    GREEN,  # (0, 255, 0)
+    JADE,  # (0, 255, 40)
+    MAGENTA,  # (255, 0, 20)
+    OLD_LACE,  # (253, 245, 230)
+    ORANGE,  # (255, 40, 0)
+    PINK,  # (242, 90, 255)
+    PURPLE,  # (180, 0, 255)
+    RED,  # (255, 0, 0)
+    TEAL,  # (0, 255, 120)
+    WHITE,  # (255, 255, 255)
+    YELLOW,  # (255, 150, 0)
+    RAINBOW  # a list of colors to cycle through
     # RAINBOW is RED, ORANGE, YELLOW, GREEN, BLUE, and PURPLE ((255, 0, 0), (255, 40, 0), (255, 150, 0), (0, 255, 0), (0, 0, 255), (180, 0, 255))
 )
 
@@ -67,7 +68,7 @@ advertisement = ProvideServicesAdvertisement(uart_server)
 # Give your CPB a unique name between the quotes below
 advertisement.complete_name = "JarLight"
 ble_radio = BLERadio()
-ble_radio.name = advertisement.complete_name # This should make it show in the Bluefruit Connect app. It often takes time to show.
+ble_radio.name = advertisement.complete_name  # This should make it show in the Bluefruit Connect app. It often takes time to show.
 print(f"ble.name is {ble_radio.name}")
 
 runAnimation = False
@@ -77,7 +78,7 @@ lightPosition = -1
 # Update to match the pin connected to your NeoPixels if you are using a different pad/pin.
 led_pin = board.A1
 # UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
-num_leds = 20
+num_leds = 10
 defaultColor = AMBER
 pickedColor = defaultColor
 
@@ -91,11 +92,12 @@ strip = neopixel.NeoPixel(led_pin, num_leds, brightness=0.85, auto_write=False)
 
 # for night-rider, battlestar galactica larson scanner effect, set length to something like 3 and speed to a bit longer like 0.2
 # Comet has a dimming tale and can also bounce back.
-cometTailLength = int(num_leds/3) + 1
+cometTailLength = int(num_leds / 3) + 1
 
 loopTimes = 0
 strip.fill(pickedColor)
 strip.write()
+
 
 # The function runSelected will run the animation number stored in the value animation_number.
 # This function is called in the while True: loop whenever an animation has been started, in while not ble.connected (when not connected to bluetooth)
@@ -130,7 +132,7 @@ def runSelectedAnimation():
         # Rainbow: Entire strip starts RED and all lights fade together through rainbow
         rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
         # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
-        rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds/3))
+        rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
         # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
         rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
         # the animation below runs all three animations, one after the other.
@@ -138,12 +140,13 @@ def runSelectedAnimation():
         while animations.animate():
             pass
 
+print("Bluetooth Mason Jar Code is Running!")
 while True:
     ble.start_advertising(advertisement)
     while not ble.connected:
         if runAnimation:
             runSelectedAnimation()
-    
+
     # Now that we're connected we no longer need to advertise the CPB as available for connection.
     ble.stop_advertising()
 
@@ -152,33 +155,33 @@ while True:
         try:
             packet = Packet.from_stream(uart_server)
         except ValueError:
-            continue # or pass. This will start the next
+            continue  # or pass. This will start the next
 
-        if isinstance(packet, ColorPacket): # A color was selected from the app color picker
+        if isinstance(packet, ColorPacket):  # A color was selected from the app color picker
             print("*** color sent")
             print("pickedColor = ", ColorPacket)
             runAnimation = False
             animation_number = 0
-            strip.fill(packet.color) # fills strip in with the color sent from Bluefruit Connect app
+            strip.fill(packet.color)  # fills strip in with the color sent from Bluefruit Connect app
             strip.write()
             pickedColor = packet.color
             # the // below will drop any remainder so the values remain Ints, which color needs
-            fade_color = (pickedColor[0]//2, pickedColor[1]//2, pickedColor[2]//2)
+            fade_color = (pickedColor[0] // 2, pickedColor[1] // 2, pickedColor[2] // 2)
             # reset light_position after picking a color
             light_position = -1
 
-        if isinstance(packet, ButtonPacket): # A button was pressed from the app Control Pad
+        if isinstance(packet, ButtonPacket):  # A button was pressed from the app Control Pad
             if packet.pressed:
-                if packet.button == ButtonPacket.BUTTON_1: # app button 1 pressed
+                if packet.button == ButtonPacket.BUTTON_1:  # app button 1 pressed
                     animation_number = 1
                     runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_2: # app button 2 pressed
+                elif packet.button == ButtonPacket.BUTTON_2:  # app button 2 pressed
                     animation_number = 2
                     runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_3: # app button 3 pressed
+                elif packet.button == ButtonPacket.BUTTON_3:  # app button 3 pressed
                     animation_number = 3
                     runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_4: # app button 4 pressed
+                elif packet.button == ButtonPacket.BUTTON_4:  # app button 4 pressed
                     animation_number = 4
                     runAnimation = True
                 elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
@@ -192,13 +195,13 @@ while True:
                         increase_or_decrease = -1
                     lightPosition += increase_or_decrease
                     if lightPosition >= len(strip):
-                        lightPosition = len(strip)-1
+                        lightPosition = len(strip) - 1
                     if lightPosition <= -1:
                         lightPosition = 0
                     strip.fill([0, 0, 0])
                     strip[lightPosition] = pickedColor
                     strip.show()
-                elif packet.button == ButtonPacket.RIGHT: # right button will speed up animations
+                elif packet.button == ButtonPacket.RIGHT:  # right button will speed up animations
                     # The RIGHT button was pressed.
                     runAnimation = True
                     # reset light_position after animation
@@ -210,12 +213,12 @@ while True:
                         adjustedTime = adjustedTime - tenths
                     if adjustedTime <= 0.0:
                         adjustedTime = minWaitTime
-                elif packet.button == ButtonPacket.LEFT: # left button will slow down animations
+                elif packet.button == ButtonPacket.LEFT:  # left button will slow down animations
                     # The LEFT button was pressed.
                     runAnimation = True
                     # reset light_position after animation
                     light_position = -1
-                   # new code below - you can delete code above
+                    # new code below - you can delete code above
                     if adjustedTime >= 0.1:
                         adjustedTime = adjustedTime + tenths
                     else:
