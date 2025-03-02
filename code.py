@@ -1,16 +1,14 @@
 # bluetooth-mason-jar-light.py
-# By John Gallaugher https://gallaugher.com  Twitter: @gallaugher
-# YouTube: https://YouTube.com/profgallaugher
-# Step-by-step build video at: https://bit.ly/bluetooth-mason-jar-light
+# By John Gallaugher https://gallaugher.com  BlueSky: @gallaugher.bsky.social
+# YouTube: https://YouTube.com/@BuildWithProfG
+# Step-by-step build video in playlist at: https://bit.ly/circuitpython-school
 
 # Run into build trouble? Adafruit runs a great help forum at:
 # https://forums.adafruit.com - most questions are answered within an hour.
 # Adafruit also has a discord channel at:
 # http://adafru.it/discord
 
-import board
-import neopixel
-import time
+import board, neopixel, time
 
 from adafruit_ble import BLERadio
 from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
@@ -39,27 +37,8 @@ from adafruit_led_animation.animation.sparkle import Sparkle
 from adafruit_led_animation.animation.SparklePulse import SparklePulse
 from adafruit_led_animation.sequence import AnimationSequence
 from adafruit_led_animation.sequence import AnimateOnce
-from adafruit_led_animation.color import (
-    AMBER,  # (255, 100, 0)
-    AQUA,  # (50, 255, 255)
-    BLACK,  # OFF (0, 0, 0)
-    BLUE,  # (0, 0, 255)
-    CYAN,  # (0, 255, 255)
-    GOLD,  # (255, 222, 30)
-    GREEN,  # (0, 255, 0)
-    JADE,  # (0, 255, 40)
-    MAGENTA,  # (255, 0, 20)
-    OLD_LACE,  # (253, 245, 230)
-    ORANGE,  # (255, 40, 0)
-    PINK,  # (242, 90, 255)
-    PURPLE,  # (180, 0, 255)
-    RED,  # (255, 0, 0)
-    TEAL,  # (0, 255, 120)
-    WHITE,  # (255, 255, 255)
-    YELLOW,  # (255, 150, 0)
-    RAINBOW  # a list of colors to cycle through
-    # RAINBOW is RED, ORANGE, YELLOW, GREEN, BLUE, and PURPLE ((255, 0, 0), (255, 40, 0), (255, 150, 0), (0, 255, 0), (0, 0, 255), (180, 0, 255))
-)
+from adafruit_led_animation.color import RED, YELLOW, ORANGE, GREEN, TEAL, CYAN, BLUE, \
+    PURPLE, MAGENTA, GOLD, PINK, AQUA, JADE, AMBER, OLD_LACE, WHITE, BLACK, RAINBOW
 
 # setup bluetooth
 ble = BLERadio()
@@ -73,12 +52,12 @@ print(f"ble.name is {ble_radio.name}")
 
 runAnimation = False
 animation_number = -1
-lightPosition = -1
+light_position = -1
 
 # Update to match the pin connected to your NeoPixels if you are using a different pad/pin.
 led_pin = board.A1
 # UPDATE NUMBER BELOW to match the number of NeoPixels you have connected
-num_leds = 10
+num_leds = 20
 defaultColor = AMBER
 pickedColor = defaultColor
 
@@ -97,7 +76,6 @@ cometTailLength = int(num_leds / 3) + 1
 loopTimes = 0
 strip.fill(pickedColor)
 strip.write()
-
 
 # The function runSelected will run the animation number stored in the value animation_number.
 # This function is called in the while True: loop whenever an animation has been started, in while not ble.connected (when not connected to bluetooth)
@@ -193,19 +171,19 @@ while True:
                     increase_or_decrease = 1
                     if packet.button == ButtonPacket.DOWN:
                         increase_or_decrease = -1
-                    lightPosition += increase_or_decrease
-                    if lightPosition >= len(strip):
-                        lightPosition = len(strip) - 1
-                    if lightPosition <= -1:
-                        lightPosition = 0
+                    light_position += increase_or_decrease
+                    if light_position >= len(strip):
+                        light_position = len(strip) - 1
+                    if light_position <= -1:
+                        light_position = 0
                     strip.fill([0, 0, 0])
-                    strip[lightPosition] = pickedColor
+                    strip[light_position] = pickedColor
                     strip.show()
                 elif packet.button == ButtonPacket.RIGHT:  # right button will speed up animations
                     # The RIGHT button was pressed.
                     runAnimation = True
                     # reset light_position after animation
-                    lightPosition = -1
+                    light_position = -1
                     # new code below - you can delete code above
                     if adjustedTime <= 0.1:
                         adjustedTime = adjustedTime - hundredths
