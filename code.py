@@ -73,9 +73,27 @@ strip = neopixel.NeoPixel(led_pin, num_leds, brightness=0.85, auto_write=False)
 # Comet has a dimming tale and can also bounce back.
 cometTailLength = int(num_leds / 3) + 1
 
+cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
+pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
+sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
+
+# Rainbow: Entire strip starts RED and all lights fade together through rainbow
+rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
+# RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
+rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
+# RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
+rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
+# the animation below runs all three animations, one after the other.
+rainbowSequence = AnimationSequence(rainbowAnimation, rainbowCometAnimation,
+                                    rainbowSparkleAnimation, advance_interval=5, auto_clear=True)
+
+current_animation = AnimationSequence(cometAnimation)
+
 loopTimes = 0
 strip.fill(pickedColor)
 strip.write()
+
+first_time = True
 
 # The function runSelected will run the animation number stored in the value animation_number.
 # This function is called in the while True: loop whenever an animation has been started, in while not ble.connected (when not connected to bluetooth)
@@ -83,41 +101,52 @@ strip.write()
 # animations are started, then the user shuts off their phone or moves out of bluetooth range, the
 # last selected animation will continue to run.
 def runSelectedAnimation():
+    global first_time
+    global current_animation
     if animation_number == 1:
-        print("*** COMET or LARSON SCANNER ***")
-        # I set bounce = False because that makes it look circular.
-        # for a tie it's better to True so it looks like it bounces up and down.
-        cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-        animations = AnimateOnce(cometAnimation)
-        while animations.animate():
-            pass
+        if first_time:
+            print("*** COMET or LARSON SCANNER ***")
+            # I set bounce = False because that makes it look circular.
+            # for a tie it's better to True so it looks like it bounces up and down.
+            current_animation = cometAnimation
+            first_time = False
+        current_animation.animate()
     elif animation_number == 2:
-        print("*** PULSE ***")
-        pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
-        animations = AnimateOnce(pulseAnimation)
-        while animations.animate():
-            pass
+        if first_time:
+            print("*** PULSE ***")
+            # I set bounce = False because that makes it look circular.
+            # for a tie it's better to True so it looks like it bounces up and down.
+            current_animation = pulseAnimation
+            first_time = False
+        current_animation.animate()
     elif animation_number == 3:
-        # For some reason Sparkle runs indefinitely
-        # so I skipped Sparkle & used SparklePulse
-        print("*** SPARKLE PULSE ***")
-        sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
-        animations = AnimateOnce(sparklePulseAnimation)
-        while animations.animate():
-            pass
+        if first_time:
+            print("*** SPARKLE PULSE ***")
+            # I set bounce = False because that makes it look circular.
+            # for a tie it's better to True so it looks like it bounces up and down.
+            current_animation = sparklePulseAnimation
+            first_time = False
+        current_animation.animate()
     elif animation_number == 4:
-        print("*** RAINBOWS ***")
-        # Rainbow: Entire strip starts RED and all lights fade together through rainbow
-        rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
-        # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
-        rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
-        # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
-        rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
-        # the animation below runs all three animations, one after the other.
-        animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
-        while animations.animate():
-            pass
+        rainbowSequence
+        if first_time:
+            print("*** RAINBOW ***")
+            current_animation = rainbowSequence
+            first_time = False
+        current_animation.animate()
+        # print("*** RAINBOWS ***")
+        # # Rainbow: Entire strip starts RED and all lights fade together through rainbow
+        # rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
+        # # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
+        # rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
+        # # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
+        # rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
+        # # the animation below runs all three animations, one after the other.
+        # animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
+        # while animations.animate():
+        #     pass
 
+times_packet_checked = 0
 print("Bluetooth Mason Jar Code is Running!")
 while True:
     ble.start_advertising(advertisement)
@@ -129,78 +158,84 @@ while True:
     ble.stop_advertising()
 
     while ble.connected:
-        # if ble.in_waiting:
-        try:
-            packet = Packet.from_stream(uart_server)
-        except ValueError:
-            continue  # or pass. This will start the next
+        if uart_server.in_waiting:
+            try:
+                packet = Packet.from_stream(uart_server)
+            except ValueError:
+                continue  # or pass. This will start the next
 
-        if isinstance(packet, ColorPacket):  # A color was selected from the app color picker
-            print("*** color sent")
-            print("pickedColor = ", ColorPacket)
-            runAnimation = False
-            animation_number = 0
-            strip.fill(packet.color)  # fills strip in with the color sent from Bluefruit Connect app
-            strip.write()
-            pickedColor = packet.color
-            # the // below will drop any remainder so the values remain Ints, which color needs
-            fade_color = (pickedColor[0] // 2, pickedColor[1] // 2, pickedColor[2] // 2)
-            # reset light_position after picking a color
-            light_position = -1
+            if isinstance(packet, ColorPacket):  # A color was selected from the app color picker
+                print("*** color sent")
+                print("pickedColor = ", ColorPacket)
+                runAnimation = False
+                animation_number = 0
+                strip.fill(packet.color)  # fills strip in with the color sent from Bluefruit Connect app
+                strip.write()
+                pickedColor = packet.color
+                # the // below will drop any remainder so the values remain Ints, which color needs
+                fade_color = (pickedColor[0] // 2, pickedColor[1] // 2, pickedColor[2] // 2)
+                # reset light_position after picking a color
+                light_position = -1
 
-        if isinstance(packet, ButtonPacket):  # A button was pressed from the app Control Pad
-            if packet.pressed:
-                if packet.button == ButtonPacket.BUTTON_1:  # app button 1 pressed
-                    animation_number = 1
-                    runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_2:  # app button 2 pressed
-                    animation_number = 2
-                    runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_3:  # app button 3 pressed
-                    animation_number = 3
-                    runAnimation = True
-                elif packet.button == ButtonPacket.BUTTON_4:  # app button 4 pressed
-                    animation_number = 4
-                    runAnimation = True
-                elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
-                    # if up or down was pressed, stop animation and move a single light
-                    # up or down on the strand each time the up or down arrow is pressed.
-                    animation_number = 0
-                    runAnimation = False
-                    # The UP or DOWN button was pressed.
-                    increase_or_decrease = 1
-                    if packet.button == ButtonPacket.DOWN:
-                        increase_or_decrease = -1
-                    light_position += increase_or_decrease
-                    if light_position >= len(strip):
-                        light_position = len(strip) - 1
-                    if light_position <= -1:
-                        light_position = 0
-                    strip.fill([0, 0, 0])
-                    strip[light_position] = pickedColor
-                    strip.show()
-                elif packet.button == ButtonPacket.RIGHT:  # right button will speed up animations
-                    # The RIGHT button was pressed.
-                    runAnimation = True
-                    # reset light_position after animation
-                    light_position = -1
-                    # new code below - you can delete code above
-                    if adjustedTime <= 0.1:
-                        adjustedTime = adjustedTime - hundredths
-                    else:
-                        adjustedTime = adjustedTime - tenths
-                    if adjustedTime <= 0.0:
-                        adjustedTime = minWaitTime
-                elif packet.button == ButtonPacket.LEFT:  # left button will slow down animations
-                    # The LEFT button was pressed.
-                    runAnimation = True
-                    # reset light_position after animation
-                    light_position = -1
-                    # new code below - you can delete code above
-                    if adjustedTime >= 0.1:
-                        adjustedTime = adjustedTime + tenths
-                    else:
-                        adjustedTime = adjustedTime + hundredths
+            times_packet_checked += 1
+            print(f"Checking Packet: {times_packet_checked}")
+            if isinstance(packet, ButtonPacket):  # A button was pressed from the app Control Pad
+                if packet.pressed:
+                    if packet.button == ButtonPacket.BUTTON_1:  # app button 1 pressed
+                        first_time = True
+                        animation_number = 1
+                        runAnimation = True
+                    elif packet.button == ButtonPacket.BUTTON_2:  # app button 2 pressed
+                        first_time = True
+                        animation_number = 2
+                        runAnimation = True
+                    elif packet.button == ButtonPacket.BUTTON_3:  # app button 3 pressed
+                        first_time = True
+                        animation_number = 3
+                        runAnimation = True
+                    elif packet.button == ButtonPacket.BUTTON_4:  # app button 4 pressed
+                        first_time = True
+                        animation_number = 4
+                        runAnimation = True
+                    elif packet.button == ButtonPacket.UP or packet.button == ButtonPacket.DOWN:
+                        # if up or down was pressed, stop animation and move a single light
+                        # up or down on the strand each time the up or down arrow is pressed.
+                        animation_number = 0
+                        runAnimation = False
+                        # The UP or DOWN button was pressed.
+                        increase_or_decrease = 1
+                        if packet.button == ButtonPacket.DOWN:
+                            increase_or_decrease = -1
+                        light_position += increase_or_decrease
+                        if light_position >= len(strip):
+                            light_position = len(strip) - 1
+                        if light_position <= -1:
+                            light_position = 0
+                        strip.fill([0, 0, 0])
+                        strip[light_position] = pickedColor
+                        strip.show()
+                    elif packet.button == ButtonPacket.RIGHT:  # right button will speed up animations
+                        # The RIGHT button was pressed.
+                        runAnimation = True
+                        # reset light_position after animation
+                        light_position = -1
+                        # new code below - you can delete code above
+                        if adjustedTime <= 0.1:
+                            adjustedTime = adjustedTime - hundredths
+                        else:
+                            adjustedTime = adjustedTime - tenths
+                        if adjustedTime <= 0.0:
+                            adjustedTime = minWaitTime
+                    elif packet.button == ButtonPacket.LEFT:  # left button will slow down animations
+                        # The LEFT button was pressed.
+                        runAnimation = True
+                        # reset light_position after animation
+                        light_position = -1
+                        # new code below - you can delete code above
+                        if adjustedTime >= 0.1:
+                            adjustedTime = adjustedTime + tenths
+                        else:
+                            adjustedTime = adjustedTime + hundredths
         if runAnimation == True:
             runSelectedAnimation()
     # If we got here, we lost the connection. Go up to the top and start
