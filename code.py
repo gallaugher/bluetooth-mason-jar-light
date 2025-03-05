@@ -36,7 +36,6 @@ from adafruit_led_animation.animation.rainbowsparkle import RainbowSparkle
 from adafruit_led_animation.animation.sparkle import Sparkle
 from adafruit_led_animation.animation.SparklePulse import SparklePulse
 from adafruit_led_animation.sequence import AnimationSequence
-from adafruit_led_animation.sequence import AnimateOnce
 from adafruit_led_animation.color import RED, YELLOW, ORANGE, GREEN, TEAL, CYAN, BLUE, \
     PURPLE, MAGENTA, GOLD, PINK, AQUA, JADE, AMBER, OLD_LACE, WHITE, BLACK, RAINBOW
 
@@ -46,13 +45,13 @@ uart_server = UARTService()
 advertisement = ProvideServicesAdvertisement(uart_server)
 # Give your CPB a unique name between the quotes below
 advertisement.complete_name = "JarLight"
-ble_radio = BLERadio()
-ble_radio.name = advertisement.complete_name  # This should make it show in the Bluefruit Connect app. It often takes time to show.
-print(f"ble.name is {ble_radio.name}")
+ble.name = advertisement.complete_name  # This should make it show in the Bluefruit Connect app. It often takes time to show.
+print(f"ble.name is {ble.name}")
 
-runAnimation = False
-animation_number = -1
-light_position = -1
+runAnimation = False # is an animation running?
+animation_number = -1 # no initial animation set
+current_animation = None
+light_position = -1 # used for up/down arrows. No position set yet
 
 # Update to match the pin connected to your NeoPixels if you are using a different pad/pin.
 led_pin = board.A1
@@ -72,28 +71,23 @@ strip = neopixel.NeoPixel(led_pin, num_leds, brightness=0.85, auto_write=False)
 # for night-rider, battlestar galactica larson scanner effect, set length to something like 3 and speed to a bit longer like 0.2
 # Comet has a dimming tale and can also bounce back.
 cometTailLength = int(num_leds / 3) + 1
-
-cometAnimation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
-pulseAnimation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
-sparklePulseAnimation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
-
-# Rainbow: Entire strip starts RED and all lights fade together through rainbow
-rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
-# RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
-rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
-# RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
-rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
-# the animation below runs all three animations, one after the other.
-rainbowSequence = AnimationSequence(rainbowAnimation, rainbowCometAnimation,
-                                    rainbowSparkleAnimation, advance_interval=5, auto_clear=True)
-
-current_animation = AnimationSequence(cometAnimation)
-
-loopTimes = 0
 strip.fill(pickedColor)
-strip.write()
-
+strip.show() # We initially light up all pixels in the default color.
 first_time = True
+
+def configureRainbowAnimation():
+    global first_time
+    global current_animation
+    print(f"adjustedTime: {adjustedTime}, pickedColor: {pickedColor}")
+    # Rainbow: Entire strip starts RED and all lights fade together through rainbow
+    rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
+    # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
+    rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
+    # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
+    rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
+    # the animation below runs all three animations, one after the other.
+    return AnimationSequence(rainbowAnimation, rainbowCometAnimation,
+                                        rainbowSparkleAnimation, advance_interval=5, auto_clear=True)
 
 # The function runSelected will run the animation number stored in the value animation_number.
 # This function is called in the while True: loop whenever an animation has been started, in while not ble.connected (when not connected to bluetooth)
@@ -103,48 +97,39 @@ first_time = True
 def runSelectedAnimation():
     global first_time
     global current_animation
+    if first_time:
+        strip.fill(BLACK)
+        strip.show()
     if animation_number == 1:
         if first_time:
             print("*** COMET or LARSON SCANNER ***")
             # I set bounce = False because that makes it look circular.
             # for a tie it's better to True so it looks like it bounces up and down.
-            current_animation = cometAnimation
+            print(f"adjustedTime: {adjustedTime}, pickedColor: {pickedColor}")
+            current_animation = Comet(strip, speed=adjustedTime, color=pickedColor, tail_length=cometTailLength, bounce=False)
             first_time = False
         current_animation.animate()
     elif animation_number == 2:
         if first_time:
             print("*** PULSE ***")
-            # I set bounce = False because that makes it look circular.
-            # for a tie it's better to True so it looks like it bounces up and down.
-            current_animation = pulseAnimation
+            print(f"adjustedTime: {adjustedTime}, pickedColor: {pickedColor}")
+            current_animation = Pulse(strip, speed=adjustedTime, color=pickedColor, period=3)
             first_time = False
         current_animation.animate()
     elif animation_number == 3:
         if first_time:
             print("*** SPARKLE PULSE ***")
-            # I set bounce = False because that makes it look circular.
-            # for a tie it's better to True so it looks like it bounces up and down.
-            current_animation = sparklePulseAnimation
+            print(f"adjustedTime: {adjustedTime}, pickedColor: {pickedColor}")
+            current_animation = SparklePulse(strip, speed=adjustedTime, period=12, color=pickedColor)
             first_time = False
         current_animation.animate()
     elif animation_number == 4:
-        rainbowSequence
         if first_time:
+            rainbowSequence = configureRainbowAnimation()
             print("*** RAINBOW ***")
             current_animation = rainbowSequence
             first_time = False
         current_animation.animate()
-        # print("*** RAINBOWS ***")
-        # # Rainbow: Entire strip starts RED and all lights fade together through rainbow
-        # rainbowAnimation = Rainbow(strip, speed=adjustedTime, period=2)
-        # # RainbowSparkle: Strip sparkes all one color (Red first), then sparkles all one color through rest of the rainbow
-        # rainbowSparkleAnimation = RainbowSparkle(strip, speed=adjustedTime, period=5, num_sparkles=int(num_leds / 3))
-        # # RainbowComet - is a larson-style chase effect with comet in a rainbow pattern.
-        # rainbowCometAnimation = RainbowComet(strip, speed=adjustedTime, tail_length=cometTailLength, bounce=True)
-        # # the animation below runs all three animations, one after the other.
-        # animations = AnimateOnce(rainbowAnimation, rainbowCometAnimation, rainbowSparkleAnimation)
-        # while animations.animate():
-        #     pass
 
 times_packet_checked = 0
 print("Bluetooth Mason Jar Code is Running!")
@@ -170,10 +155,8 @@ while True:
                 runAnimation = False
                 animation_number = 0
                 strip.fill(packet.color)  # fills strip in with the color sent from Bluefruit Connect app
-                strip.write()
+                strip.show()
                 pickedColor = packet.color
-                # the // below will drop any remainder so the values remain Ints, which color needs
-                fade_color = (pickedColor[0] // 2, pickedColor[1] // 2, pickedColor[2] // 2)
                 # reset light_position after picking a color
                 light_position = -1
 
@@ -212,30 +195,33 @@ while True:
                         if light_position <= -1:
                             light_position = 0
                         strip.fill([0, 0, 0])
+                        print(f"pickedColor: {pickedColor}")
                         strip[light_position] = pickedColor
                         strip.show()
                     elif packet.button == ButtonPacket.RIGHT:  # right button will speed up animations
                         # The RIGHT button was pressed.
+                        first_time = True
                         runAnimation = True
                         # reset light_position after animation
                         light_position = -1
-                        # new code below - you can delete code above
                         if adjustedTime <= 0.1:
                             adjustedTime = adjustedTime - hundredths
                         else:
                             adjustedTime = adjustedTime - tenths
                         if adjustedTime <= 0.0:
                             adjustedTime = minWaitTime
+                        print(f"adjustedTime: {adjustedTime}")
                     elif packet.button == ButtonPacket.LEFT:  # left button will slow down animations
                         # The LEFT button was pressed.
+                        first_time = True
                         runAnimation = True
                         # reset light_position after animation
                         light_position = -1
-                        # new code below - you can delete code above
                         if adjustedTime >= 0.1:
                             adjustedTime = adjustedTime + tenths
                         else:
                             adjustedTime = adjustedTime + hundredths
+                        print(f"adjustedTime: {adjustedTime}")
         if runAnimation == True:
             runSelectedAnimation()
     # If we got here, we lost the connection. Go up to the top and start
